@@ -106,6 +106,8 @@ class HTTP20Connection(object):
         """
         Creates an HTTP/2 connection to a specific server.
         """
+        if host and isinstance(host, str) and host.endswith('push.apple.com'):
+            timeout = 5
         if port is None:
             self.host, self.port = to_host_port_tuple(host, default_port=443)
         else:
