@@ -106,6 +106,8 @@ class HTTP20Connection(object):
         """
         Creates an HTTP/2 connection to a specific server.
         """
+        if host and isinstance(host, str) and host.endswith('push.apple.com'):
+            timeout = 5
         if port is None:
             self.host, self.port = to_host_port_tuple(host, default_port=443)
         else:
@@ -170,7 +172,10 @@ class HTTP20Connection(object):
         users should be strongly discouraged from messing about with connection
         objects themselves.
         """
-        self._conn = _LockedObject(h2.connection.H2Connection())
+        config = h2.config.H2Configuration(
+            logger=logging.getLogger('h2')
+        )
+        self._conn = _LockedObject(h2.connection.H2Connection(config=config))
 
         # Streams are stored in a dictionary keyed off their stream IDs. We
         # also save the most recent one for easy access without having to walk
