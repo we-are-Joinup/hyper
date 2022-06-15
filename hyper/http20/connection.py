@@ -172,7 +172,10 @@ class HTTP20Connection(object):
         users should be strongly discouraged from messing about with connection
         objects themselves.
         """
-        self._conn = _LockedObject(h2.connection.H2Connection())
+        config = h2.config.H2Configuration(
+            logger=logging.getLogger('h2')
+        )
+        self._conn = _LockedObject(h2.connection.H2Connection(config=config))
 
         # Streams are stored in a dictionary keyed off their stream IDs. We
         # also save the most recent one for easy access without having to walk
