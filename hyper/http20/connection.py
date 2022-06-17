@@ -347,10 +347,14 @@ class HTTP20Connection(object):
         :returns: Nothing.
 
         """
+        log.debug("connect: 1")
         with self._lock:
+            log.debug("connect: 2")
             if self._sock is not None:
+                log.debug("connect: 3")
                 return
-
+            log.debug("connect: 4")
+            log.debug(self._timeout)
             if isinstance(self._timeout, tuple):
                 connect_timeout = self._timeout[0]
                 read_timeout = self._timeout[1]
@@ -358,8 +362,10 @@ class HTTP20Connection(object):
                 connect_timeout = self._timeout
                 read_timeout = self._timeout
 
+            log.debug("connect: 5")
             if self.proxy_host and self.secure:
                 # Send http CONNECT method to a proxy and acquire the socket
+                log.debug("connect: 6")
                 sock = _create_tunnel(
                     self.proxy_host,
                     self.proxy_port,
@@ -369,18 +375,23 @@ class HTTP20Connection(object):
                     timeout=self._timeout
                 )
             elif self.proxy_host:
+                log.debug("connect: 7")
                 # Simple http proxy
                 sock = socket.create_connection(
                     (self.proxy_host, self.proxy_port),
                     timeout=connect_timeout
                 )
             else:
+                log.debug("connect: 8")
                 sock = socket.create_connection((self.host, self.port),
                                                 timeout=connect_timeout)
+                log.debug("connect: 9")
 
             if self.secure:
+                log.debug("connect: 10")
                 sock, proto = wrap_socket(sock, self.host, self.ssl_context,
                                           force_proto=self.force_proto)
+                log.debug("connect: 11")
             else:
                 proto = H2C_PROTOCOL
 

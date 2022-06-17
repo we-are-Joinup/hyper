@@ -5,6 +5,8 @@ hyper/tls
 
 Contains the TLS/SSL logic for use in hyper.
 """
+import logging
+
 import os.path as path
 from .common.exceptions import MissingCertFile
 from .compat import ignore_missing, ssl
@@ -23,13 +25,15 @@ _context = None
 # Work out where our certificates are.
 cert_loc = path.join(path.dirname(__file__), 'certs.pem')
 
+log = logging.getLogger(__name__)
+
 
 def wrap_socket(sock, server_hostname, ssl_context=None, force_proto=None):
     """
     A vastly simplified SSL wrapping function. We'll probably extend this to
     do more things later.
     """
-
+    log.debug("wrap_socket: 1")
     global _context
 
     if ssl_context:
@@ -40,30 +44,43 @@ def wrap_socket(sock, server_hostname, ssl_context=None, force_proto=None):
         if _context is None:  # pragma: no cover
             _context = init_context()
         _ssl_context = _context
+    log.debug("wrap_socket: 2")
 
     # the spec requires SNI support
     ssl_sock = _ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+    log.debug("wrap_socket: 3")
     # Setting SSLContext.check_hostname to True only verifies that the
     # post-handshake servername matches that of the certificate. We also need
     # to check that it matches the requested one.
     if _ssl_context.check_hostname:  # pragma: no cover
         try:
+            log.debug("wrap_socket: 4")
             ssl.match_hostname(ssl_sock.getpeercert(), server_hostname)
+            log.debug("wrap_socket: 5")
         except AttributeError:
+            log.debug("wrap_socket: 6")
             ssl.verify_hostname(ssl_sock, server_hostname)  # pyopenssl
+            log.debug("wrap_socket: 7")
 
     # Allow for the protocol to be forced externally.
     proto = force_proto
 
     # ALPN is newer, so we prefer it over NPN. The odds of us getting
     # different answers is pretty low, but let's be sure.
+    log.debug("wrap_socket: 8")
     with ignore_missing():
+        log.debug("wrap_socket: 9")
         if proto is None:
             proto = ssl_sock.selected_alpn_protocol()
+        log.debug("wrap_socket: 10")
 
+    log.debug("wrap_socket: 11")
     with ignore_missing():
+        log.debug("wrap_socket: 12")
         if proto is None:
+            log.debug("wrap_socket: 13")
             proto = ssl_sock.selected_npn_protocol()
+            log.debug("wrap_socket: 14")
 
     return (ssl_sock, proto)
 
